@@ -1,0 +1,19 @@
+# 個人のお金の情報（公開リポジトリに入れない）
+private/
+*.csv
+*.xlsx
+*.xls
+~$*
+
+# 環境変数（Supabaseのキーなど）
+.env
+.env.*
+!.env.example
+
+# 依存とビルド
+node_modules/
+.next/
+dist/
+.vercel/
+
+.DS_Store
