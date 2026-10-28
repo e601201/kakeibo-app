@@ -22,3 +22,8 @@ dist/
 .agents/
 .claude/skills/
 skills-lock.json
+
+# テストとTypeScript
+coverage/
+*.tsbuildinfo
+next-env.d.ts
