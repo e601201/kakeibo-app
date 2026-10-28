@@ -17,3 +17,8 @@ dist/
 .vercel/
 
 .DS_Store
+
+# エージェント用スキル（npx skills でインストール）
+.agents/
+.claude/skills/
+skills-lock.json
