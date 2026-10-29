@@ -4,11 +4,11 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Vercelに公開されたURLをiPhoneのSafariで開き、ホーム画面に追加できる（マニフェストとアイコンがある）
+- [x] Vercelに公開されたURLをiPhoneのSafariで開き、ホーム画面に追加できる（マニフェストとアイコンがある）
 - [x] Googleアカウントでログインでき、ログインしたままにできる
-- [ ] 環境変数で許可したメールアドレス以外でログインすると、すぐに締め出され、何も表示されない
+- [x] 環境変数で許可したメールアドレス以外でログインすると、すぐに締め出され、何も表示されない
 - [x] Supabaseのキーと許可するメールアドレスは環境変数にだけあり、リポジトリに入っていない
 - [x] 持ち主（SupabaseのユーザーID）とRow Level Securityで本人の行しか読み書きできない、というテーブルの作り方が決まっていて、以降のテーブルが同じ形で作れる
 - [x] 家計簿コア（DBも画面も知らない純粋なTypeScriptのモジュール）の置き場所があり、そのテストが1コマンドで回り、データベースやネットワークを使わない
@@ -18,3 +18,4 @@
 
 - 2026-10-28 実装：コードと手順書（docs/setup.md）は揃った。残りの4つは本人が docs/setup.md の手順でSupabase・Google・Vercelを用意してから確かめる。Row Level Securityの型（private.protect_by_owner）は、手元のDockerの空き容量が足りずローカルのSupabaseで実行できていないため、`supabase db push` のときに確かめる。
 - 2026-10-29 本人がSupabase・Googleログインを用意し、ログインできることを確かめた。マイグレーション（private.protect_by_owner）は本番に適用済み（`supabase migration list` で確認）。
+- 2026-10-29 本人がVercelへの公開（https://kakeibo-app-ashen-omega.vercel.app）、iPhoneのホーム画面への追加、別のアカウントの締め出し、新規登録の停止を確かめた。チケット完了。
