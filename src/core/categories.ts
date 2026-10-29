@@ -1,3 +1,5 @@
+import type { Validated } from "./validated";
+
 /** 費目の種類。記録が支出か振替かは、選んだ費目の種類で決まる。 */
 export type CategoryKind = "expense" | "transfer";
 
@@ -42,11 +44,6 @@ export function initialCategories(): NewCategory[] {
   return INITIAL_CATEGORIES.map((c, i) => ({ ...c, sortOrder: i, memo: "", hidden: false }));
 }
 
-/** 検証の結果。間違いがあれば欄ごとの理由を返す。 */
-export type Validated<T, Field extends string> =
-  | { ok: true; value: T }
-  | { ok: false; errors: Partial<Record<Field, string>> };
-
 /** 画面から受け取る、費目を追加する入力。 */
 export type CategoryInput = { name: string; kind: string; memo: string };
 
@@ -88,6 +85,11 @@ export function editCategory(
 export function sortCategories(categories: readonly Category[]): Category[] {
   // 表示順が重なっていても毎回同じ並びになるよう、id で決める
   return [...categories].sort((a, b) => a.sortOrder - b.sortOrder || (a.id < b.id ? -1 : 1));
+}
+
+/** 入力画面で選べる費目。非表示の費目は出さず、表示順に並べる。 */
+export function categoriesForInput(categories: readonly Category[]): Category[] {
+  return sortCategories(categories.filter((c) => !c.hidden));
 }
 
 /**

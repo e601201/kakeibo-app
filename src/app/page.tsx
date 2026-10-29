@@ -12,6 +12,12 @@ export default function Home() {
         </form>
       </header>
       <p className="text-zinc-500">まだ記録はありません。</p>
+      <Link
+        href="/input"
+        className="rounded-lg bg-emerald-600 px-4 py-4 text-center text-lg font-bold text-white"
+      >
+        入力する
+      </Link>
       <nav>
         <Link href="/settings/categories" className="text-emerald-700 underline">
           費目の設定

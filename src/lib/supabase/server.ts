@@ -20,3 +20,14 @@ export async function createClient() {
     },
   });
 }
+
+/**
+ * Server Action で使う、ログインしていることを確かめた Supabase クライアント。
+ * 本人かどうかは proxy が確かめ、データは Row Level Security が守る。
+ */
+export async function createSignedInClient() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims) throw new Error("ログインしていません");
+  return supabase;
+}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type Category,
   addCategory,
+  categoriesForInput,
   editCategory,
   initialCategories,
   moveCategory,
@@ -152,5 +153,16 @@ describe("費目の並べ替え", () => {
       category({ id: "b", name: "B", sortOrder: 1 }),
     ];
     expect(sortCategories(shuffled).map((c) => c.id)).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("入力画面の費目", () => {
+  it("非表示の費目は出ず、表示順に並ぶ", () => {
+    const categories = [
+      category({ id: "c", name: "C", sortOrder: 2 }),
+      category({ id: "a", name: "A", sortOrder: 0, hidden: true }),
+      category({ id: "b", name: "B", sortOrder: 1 }),
+    ];
+    expect(categoriesForInput(categories).map((c) => c.id)).toEqual(["b", "c"]);
   });
 });

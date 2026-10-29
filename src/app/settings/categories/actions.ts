@@ -15,7 +15,8 @@ import {
   updateCategoryHidden,
   updateSortOrders,
 } from "@/lib/data/categories";
-import { createClient } from "@/lib/supabase/server";
+import { formText } from "@/lib/form-data";
+import { createSignedInClient } from "@/lib/supabase/server";
 
 /**
  * フォームに返す結果。間違いがあれば欄ごとの理由と、入れ直さずに済むよう送った値を持つ
@@ -27,21 +28,8 @@ export type FormState = {
   saved?: boolean;
 };
 
-// 本人かどうかは proxy が確かめ、データは Row Level Security が守る。ここではログインしていることだけ確かめる。
-async function signedInClient() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  if (!data?.claims) throw new Error("ログインしていません");
-  return supabase;
-}
-
-function formText(formData: FormData, name: string): string {
-  const value = formData.get(name);
-  return typeof value === "string" ? value : "";
-}
-
 export async function addCategoryAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const supabase = await signedInClient();
+  const supabase = await createSignedInClient();
   const values = {
     name: formText(formData, "name"),
     kind: formText(formData, "kind"),
@@ -60,7 +48,7 @@ export async function editCategoryAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const supabase = await signedInClient();
+  const supabase = await createSignedInClient();
   const values = { name: formText(formData, "name"), memo: formText(formData, "memo") };
   const result = editCategory(id, values, await loadCategories(supabase));
   if (!result.ok) return { errors: result.errors, values };
@@ -76,13 +64,13 @@ function duplicateName(values: Partial<CategoryInput>): FormState {
 }
 
 export async function moveCategoryAction(id: string, direction: "up" | "down") {
-  const supabase = await signedInClient();
+  const supabase = await createSignedInClient();
   await updateSortOrders(supabase, moveCategory(await loadCategories(supabase), id, direction));
   refresh();
 }
 
 export async function setCategoryHiddenAction(id: string, hidden: boolean) {
-  const supabase = await signedInClient();
+  const supabase = await createSignedInClient();
   await updateCategoryHidden(supabase, id, hidden);
   refresh();
 }
