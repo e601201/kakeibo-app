@@ -7,13 +7,14 @@
 **Status:** ready-for-agent
 
 - [ ] Vercelに公開されたURLをiPhoneのSafariで開き、ホーム画面に追加できる（マニフェストとアイコンがある）
-- [ ] Googleアカウントでログインでき、ログインしたままにできる
+- [x] Googleアカウントでログインでき、ログインしたままにできる
 - [ ] 環境変数で許可したメールアドレス以外でログインすると、すぐに締め出され、何も表示されない
 - [x] Supabaseのキーと許可するメールアドレスは環境変数にだけあり、リポジトリに入っていない
-- [ ] 持ち主（SupabaseのユーザーID）とRow Level Securityで本人の行しか読み書きできない、というテーブルの作り方が決まっていて、以降のテーブルが同じ形で作れる
+- [x] 持ち主（SupabaseのユーザーID）とRow Level Securityで本人の行しか読み書きできない、というテーブルの作り方が決まっていて、以降のテーブルが同じ形で作れる
 - [x] 家計簿コア（DBも画面も知らない純粋なTypeScriptのモジュール）の置き場所があり、そのテストが1コマンドで回り、データベースやネットワークを使わない
 - [x] SupabaseとVercelのアカウント作成・キーの設定など、本人にしかできない手順がまとまっている
 
 ## Comments
 
 - 2026-10-28 実装：コードと手順書（docs/setup.md）は揃った。残りの4つは本人が docs/setup.md の手順でSupabase・Google・Vercelを用意してから確かめる。Row Level Securityの型（private.protect_by_owner）は、手元のDockerの空き容量が足りずローカルのSupabaseで実行できていないため、`supabase db push` のときに確かめる。
+- 2026-10-29 本人がSupabase・Googleログインを用意し、ログインできることを確かめた。マイグレーション（private.protect_by_owner）は本番に適用済み（`supabase migration list` で確認）。
