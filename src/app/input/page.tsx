@@ -6,6 +6,8 @@ import { loadCategories } from "@/lib/data/categories";
 import { loadPaymentMethods } from "@/lib/data/payment-methods";
 import { createClient } from "@/lib/supabase/server";
 import { ExpenseForm } from "./expense-form";
+import { IncomeForm } from "./income-form";
+import { InputTabs } from "./input-tabs";
 
 export default function InputPage() {
   return (
@@ -17,23 +19,29 @@ export default function InputPage() {
         </Link>
       </header>
       <Suspense fallback={<p className="text-zinc-500">読み込み中…</p>}>
-        <ExpenseFormWithData />
+        <InputForms />
       </Suspense>
     </main>
   );
 }
 
-async function ExpenseFormWithData() {
+async function InputForms() {
   const supabase = await createClient();
   const [categories, paymentMethods] = await Promise.all([
     loadCategories(supabase),
     loadPaymentMethods(supabase),
   ]);
+  const today = todayInJapan(new Date());
   return (
-    <ExpenseForm
-      categories={categoriesForInput(categories)}
-      paymentMethods={paymentMethods}
-      today={todayInJapan(new Date())}
+    <InputTabs
+      expenseForm={
+        <ExpenseForm
+          categories={categoriesForInput(categories)}
+          paymentMethods={paymentMethods}
+          today={today}
+        />
+      }
+      incomeForm={<IncomeForm today={today} />}
     />
   );
 }

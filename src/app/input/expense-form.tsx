@@ -1,11 +1,10 @@
 "use client";
 
 import { useActionState, useRef } from "react";
+import { FieldError, inputClass } from "@/app/_components/form";
 import { type Category, CATEGORY_KIND_LABELS } from "@/core/categories";
 import { type PaymentMethod, paymentMethodLabel } from "@/core/payment-methods";
 import { type ExpenseFormState, addExpenseAction } from "./actions";
-
-const inputClass = "w-full rounded border border-zinc-300 px-3 py-2 text-base";
 
 export function ExpenseForm({
   categories,
@@ -144,9 +143,4 @@ export function ExpenseForm({
       </button>
     </form>
   );
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <span className="text-sm text-red-600">{message}</span>;
 }

@@ -1,10 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
+import { FieldError, inputClass } from "@/app/_components/form";
 import { type Category, CATEGORY_KIND_LABELS } from "@/core/categories";
 import { type FormState, addCategoryAction, editCategoryAction } from "./actions";
-
-const inputClass = "w-full rounded border border-zinc-300 px-3 py-2 text-base";
 
 export function AddCategoryForm() {
   const [state, action, pending] = useActionState(addCategoryAction, {});
@@ -93,9 +92,4 @@ export function EditCategoryForm({ category }: { category: Category }) {
       </div>
     </form>
   );
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <span className="text-sm text-red-600">{message}</span>;
 }

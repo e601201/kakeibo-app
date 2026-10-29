@@ -67,6 +67,38 @@ export function expenseKind(
   return category.kind;
 }
 
+/** 収入の種類。 */
+export const INCOME_KINDS = ["salary", "from_wife"] as const;
+export type IncomeKind = (typeof INCOME_KINDS)[number];
+
+export const INCOME_KIND_LABELS: Record<IncomeKind, string> = {
+  salary: "給与",
+  from_wife: "妻からの入金",
+};
+
+/** 画面から受け取る、収入の入力。 */
+export type IncomeInput = { date: string; kind: string; amount: string; memo: string };
+
+/** 保存してよい収入の記録。金額は正の円の整数。 */
+export type NewIncome = { date: string; kind: IncomeKind; amount: number; memo: string };
+
+type IncomeField = "date" | "kind" | "amount";
+
+/** 収入の入力を確かめる。間違いがあれば欄ごとの理由を返す。 */
+export function validateIncome(input: IncomeInput): Validated<NewIncome, IncomeField> {
+  const date = parseDate(input.date);
+  const kind = parseIncomeKind(input.kind);
+  const amount = parsePositiveAmount(input.amount);
+
+  if ("error" in date || "error" in kind || "error" in amount) {
+    return { ok: false, errors: errorsOf({ date, kind, amount }) };
+  }
+  return {
+    ok: true,
+    value: { date: date.value, kind: kind.value, amount: amount.value, memo: input.memo.trim() },
+  };
+}
+
 type Parsed<T> = { value: T } | { error: string };
 
 function errorsOf<Field extends string>(
@@ -126,4 +158,17 @@ function parseAmount(text: string): Parsed<number> {
   if (value === 0) return { error: "0円は記録できません" };
   if (Math.abs(value) > MAX_AMOUNT) return { error: "金額が大きすぎます" };
   return { value };
+}
+
+function parseIncomeKind(kind: string): Parsed<IncomeKind> {
+  const found = INCOME_KINDS.find((k) => k === kind);
+  if (!found) return { error: "収入の種類を選んでください" };
+  return { value: found };
+}
+
+// 収入はマイナスにしない（戻ってきたお金は返金として支出に記録する）
+function parsePositiveAmount(text: string): Parsed<number> {
+  const amount = parseAmount(text);
+  if ("value" in amount && amount.value < 0) return { error: "収入は1円以上で入れてください" };
+  return amount;
 }

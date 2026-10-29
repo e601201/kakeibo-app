@@ -1,9 +1,17 @@
 "use server";
 
 import { CATEGORY_KIND_LABELS } from "@/core/categories";
-import { type ExpenseInput, expenseKind, validateExpense } from "@/core/records";
+import {
+  type ExpenseInput,
+  INCOME_KIND_LABELS,
+  type IncomeInput,
+  expenseKind,
+  validateExpense,
+  validateIncome,
+} from "@/core/records";
 import { loadCategories } from "@/lib/data/categories";
 import { insertExpense } from "@/lib/data/expenses";
+import { insertIncome } from "@/lib/data/incomes";
 import { loadPaymentMethods } from "@/lib/data/payment-methods";
 import { formText } from "@/lib/form-data";
 import { createSignedInClient } from "@/lib/supabase/server";
@@ -13,11 +21,14 @@ import { createSignedInClient } from "@/lib/supabase/server";
  * （React はアクションのあとにフォームを初期値へ戻すため）。
  * 保存できたら、続けて入力できるよう日付だけを残す。
  */
-export type ExpenseFormState = {
-  errors?: Partial<Record<keyof ExpenseInput, string>>;
-  values?: Partial<ExpenseInput>;
+type RecordFormState<Input> = {
+  errors?: Partial<Record<keyof Input, string>>;
+  values?: Partial<Input>;
   savedMessage?: string;
 };
+
+export type ExpenseFormState = RecordFormState<ExpenseInput>;
+export type IncomeFormState = RecordFormState<IncomeInput>;
 
 export async function addExpenseAction(
   _prev: ExpenseFormState,
@@ -46,5 +57,27 @@ export async function addExpenseAction(
   return {
     values: { date: expense.date },
     savedMessage: `${categoryName} ${expense.amount.toLocaleString("ja-JP")}円を${kind}として記録しました`,
+  };
+}
+
+export async function addIncomeAction(
+  _prev: IncomeFormState,
+  formData: FormData,
+): Promise<IncomeFormState> {
+  const supabase = await createSignedInClient();
+  const values: IncomeInput = {
+    date: formText(formData, "date"),
+    kind: formText(formData, "kind"),
+    amount: formText(formData, "amount"),
+    memo: formText(formData, "memo"),
+  };
+  const result = validateIncome(values);
+  if (!result.ok) return { errors: result.errors, values };
+
+  await insertIncome(supabase, result.value);
+  const income = result.value;
+  return {
+    values: { date: income.date },
+    savedMessage: `${INCOME_KIND_LABELS[income.kind]} ${income.amount.toLocaleString("ja-JP")}円を収入として記録しました`,
   };
 }
