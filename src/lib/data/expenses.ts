@@ -97,3 +97,33 @@ export async function updateExpensesCategory(
     .in("id", expenseIds);
   if (error) throw error;
 }
+
+// Supabase の API は1回に1000行までしか返さないので、分けて読む
+const PAGE_SIZE = 1000;
+
+type ExpenseAmount = Pick<NewExpense, "date" | "categoryId" | "amount">;
+
+/** 指定した費目の支出・振替のうち、日付が before より前のもの（日付・費目・金額だけ）。 */
+export async function loadExpensesBefore(
+  supabase: SupabaseClient,
+  categoryIds: string[],
+  before: string,
+): Promise<ExpenseAmount[]> {
+  if (categoryIds.length === 0) return [];
+  const records: ExpenseAmount[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("expenses")
+      .select("date, category_id, amount")
+      .in("category_id", categoryIds)
+      .lt("date", before)
+      // 分けて読むときに抜けや重なりが出ないよう、並びを決める
+      .order("id")
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    for (const row of data as { date: string; category_id: string; amount: number }[]) {
+      records.push({ date: row.date, categoryId: row.category_id, amount: row.amount });
+    }
+    if (data.length < PAGE_SIZE) return records;
+  }
+}

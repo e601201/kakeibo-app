@@ -15,7 +15,10 @@ export function dayLabel(date: string): string {
   return `${Number(m)}/${Number(d)}`;
 }
 
-/** 画面に出す割合。出さないとき（null）は「—」。例：25% */
+/**
+ * 画面に出す割合。出さないとき（null）は「—」。例：25%
+ * 届いていないのに100%と見えないよう、切り捨てる。
+ */
 export function percent(rate: number | null): string {
-  return rate === null ? "—" : `${Math.round(rate * 100)}%`;
+  return rate === null ? "—" : `${Math.floor(rate * 100)}%`;
 }

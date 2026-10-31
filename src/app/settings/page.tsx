@@ -16,6 +16,9 @@ export default function SettingsPage() {
         <Link href="/settings/categories" className="p-4">
           費目
         </Link>
+        <Link href="/settings/emergency-fund" className="p-4">
+          生活防衛資金
+        </Link>
       </nav>
     </main>
   );

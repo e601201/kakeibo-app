@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { percent, yen } from "@/app/_components/format";
+import { monthLabel, percent, yen } from "@/app/_components/format";
 import { MonthNav } from "@/app/_components/month-nav";
+import type { Category } from "@/core/categories";
+import { emergencyFundStatus } from "@/core/emergency-fund";
 import { isMonth, monthOf, todayInJapan } from "@/core/month";
 import { INCOME_KIND_LABELS } from "@/core/records";
 import { type CategoryRow, monthlyReport } from "@/core/report";
+import { loadEmergencyFundInput } from "@/lib/data/emergency-fund";
 import { loadReportInput } from "@/lib/data/report";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,9 +33,10 @@ async function Report({ searchParams }: Pick<PageProps<"/report">, "searchParams
     typeof requested === "string" && isMonth(requested)
       ? requested
       : monthOf(todayInJapan(new Date()));
-  const { rows, incomes, summary } = monthlyReport(
-    await loadReportInput(await createClient(), month),
-  );
+  const supabase = await createClient();
+  const input = await loadReportInput(supabase, month);
+  const fundInput = await loadEmergencyFundInput(supabase, input.categories, month);
+  const { rows, incomes, summary } = monthlyReport(input);
 
   return (
     <div className="flex flex-col gap-6">
@@ -67,7 +71,58 @@ async function Report({ searchParams }: Pick<PageProps<"/report">, "searchParams
 
       <CategorySection title="支出" rows={rows.filter((r) => r.category.kind === "expense")} />
       <CategorySection title="振替" rows={rows.filter((r) => r.category.kind === "transfer")} />
+
+      <EmergencyFundSection categories={input.categories} month={month} fundInput={fundInput} />
     </div>
+  );
+}
+
+function EmergencyFundSection({
+  categories,
+  month,
+  fundInput,
+}: {
+  categories: readonly Category[];
+  month: string;
+  fundInput: Awaited<ReturnType<typeof loadEmergencyFundInput>>;
+}) {
+  if (!fundInput) {
+    return (
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-bold">生活防衛資金</h2>
+        <Link href="/settings/emergency-fund" className="text-sm text-emerald-700 underline">
+          開始時の貯蓄額と目標額を登録する
+        </Link>
+      </section>
+    );
+  }
+  const { fund, records } = fundInput;
+  const { current, achievementRate, remaining } = emergencyFundStatus(
+    fund,
+    records,
+    categories,
+    month,
+  );
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-lg font-bold">生活防衛資金（{monthLabel(month)}末）</h2>
+      <div className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 text-sm">
+        <div className="flex items-baseline justify-between">
+          <span className="text-xl font-bold">{yen(current)}</span>
+          <span className="font-bold">{percent(achievementRate)}</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded bg-zinc-100">
+          <div
+            className="h-full bg-sky-500"
+            style={{ width: `${achievementRate * 100}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-xs text-zinc-500">
+          <span>目標 {yen(fund.target)}</span>
+          <span>目標まで {yen(remaining)}</span>
+        </div>
+      </div>
+    </section>
   );
 }
 
