@@ -1,3 +1,4 @@
+import { parseYen } from "./amount";
 import type { Category, CategoryKind } from "./categories";
 import type { PaymentMethod } from "./payment-methods";
 import type { Validated } from "./validated";
@@ -144,20 +145,11 @@ function parsePaymentMethod(
   return { value: id };
 }
 
-// 家計では起きない大きさを上限にして、桁の打ち間違いに気づけるようにする
-const MAX_AMOUNT = 999_999_999;
-
-// 金額は円の整数。全角の数字・マイナスと、桁区切りのカンマも読む
+// 金額は円の整数で、0は記録しない
 function parseAmount(text: string): Parsed<number> {
-  const amount = text.normalize("NFKC").replace(/[−‐]/g, "-").replace(/,/g, "").trim();
-  if (amount === "") return { error: "金額を入れてください" };
-  if (/^-?\d+\.\d+$/.test(amount)) return { error: "円の整数で入れてください" };
-  if (!/^-?\d+$/.test(amount)) return { error: "数字で入れてください" };
-
-  const value = Number(amount);
-  if (value === 0) return { error: "0円は記録できません" };
-  if (Math.abs(value) > MAX_AMOUNT) return { error: "金額が大きすぎます" };
-  return { value };
+  const amount = parseYen(text);
+  if ("value" in amount && amount.value === 0) return { error: "0円は記録できません" };
+  return amount;
 }
 
 function parseIncomeKind(kind: string): Parsed<IncomeKind> {

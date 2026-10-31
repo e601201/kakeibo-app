@@ -15,3 +15,15 @@ export function todayInJapan(now: Date): string {
 export function monthOf(date: string): string {
   return date.slice(0, 7);
 }
+
+/** 年月（YYYY-MM）として正しいか。 */
+export function isMonth(text: string): boolean {
+  return /^\d{4}-(0[1-9]|1[0-2])$/.test(text);
+}
+
+/** 月（YYYY-MM）から n か月先（マイナスなら前）の月。 */
+export function addMonths(month: string, n: number): string {
+  const [year, m] = month.split("-").map(Number);
+  const index = year * 12 + (m - 1) + n;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+}

@@ -18,9 +18,12 @@ export default function Home() {
       >
         入力する
       </Link>
-      <nav>
+      <nav className="flex flex-col gap-2">
         <Link href="/settings/categories" className="text-emerald-700 underline">
           費目の設定
+        </Link>
+        <Link href="/settings/budgets" className="text-emerald-700 underline">
+          予算と収入の予定
         </Link>
       </nav>
     </main>
