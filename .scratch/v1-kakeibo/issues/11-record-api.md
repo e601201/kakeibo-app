@@ -4,7 +4,7 @@
 
 **Blocked by:** 03, 04
 
-**Status:** in-progress
+**Status:** done
 
 - [x] `GET /api/options` で、使える費目（非表示を除く）・支払方法・収入の種類の名前が取れる
 - [x] `POST /api/expenses` に費目名・金額などのJSONを送ると、支出・振替として記録される。日付を省くと日本時間の今日になる
@@ -18,3 +18,4 @@
 - 2026-10-31 実装：家計簿コア（`src/core/record-requests.ts`：名前の読み替えと確かめ `expenseFromRequest`・`incomeFromRequest`、名前の一覧 `recordOptions`）とそのテスト、道 `/api/options`・`/api/expenses`・`/api/incomes`、本人のセッションを作る `src/lib/supabase/owner.ts` を追加した。proxy は `/api/` を cookie の確かめなしで通す。マイグレーションはない。
   - 記録の登録元は手入力（`manual`）のまま。本人が入れる記録なので、画面からの入力と分けていない。
   - 手元で確かめたこと：トークンなしは 401、収入・支出の間違いは 400、画面の道はこれまでどおりログインへ飛ぶ。本物の鍵で `GET /api/options` が一覧を返し、`POST /api/expenses` で1円の試しの記録ができた（Email のログインの設定は変えずに動いた）。
+- 2026-10-31 Vercel に `SUPABASE_SECRET_KEY` と `KAKEIBO_API_TOKEN` を入れて公開し、本番の `GET /api/options` が一覧を返すことを確かめてチケット完了。
