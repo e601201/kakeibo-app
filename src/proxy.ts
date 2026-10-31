@@ -4,12 +4,16 @@ import { isAllowedEmail, supabasePublishableKey, supabaseUrl } from "@/lib/supab
 
 // ログインせずに開ける道。
 const PUBLIC_PATHS = ["/login", "/auth/callback"];
+// 画面を開かずに記録するAPI。cookie ではなくAPIトークンで、それぞれの道が本人かどうかを確かめる
+const API_PREFIX = "/api/";
 
 /**
  * すべての画面の前で、セッションを更新し、本人以外を締め出す。
  * データそのものは Row Level Security で守るので、ここは画面の入口の守り。
  */
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith(API_PREFIX)) return NextResponse.next();
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl(), supabasePublishableKey(), {

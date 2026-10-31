@@ -60,3 +60,14 @@ Supabaseの Authentication > URL Configuration の Redirect URLs に `http://loc
 
 1. SafariでURLを開き、共有ボタン > 「ホーム画面に追加」
 2. ホーム画面のアイコンから開き、もう一度Googleでログインする（ホーム画面から開いたアプリとSafariはログイン状態を共有しない）。以後はログインしたまま使える
+
+## 8. APIを使えるようにする（使うときだけ）
+
+Claude Code などから curl で記録したいときの準備。使い方は `docs/api.md`。
+
+1. Supabaseの Project Settings > API Keys > Secret keys で秘密の鍵を作り、控える → `SUPABASE_SECRET_KEY`
+2. `openssl rand -hex 32` で合い言葉を作る → `KAKEIBO_API_TOKEN`
+3. 2つを `.env.local` とVercelの Environment Variables に入れ、Vercelで再デプロイする
+4. `docs/api.md` の `GET /api/options` を叩き、費目の一覧が返ることを確かめる
+
+トークンが漏れたら、`KAKEIBO_API_TOKEN` を作り直して再デプロイする。
