@@ -18,3 +18,8 @@ export function parseYen(text: string): ParsedYen {
   if (Math.abs(value) > MAX_AMOUNT) return { error: "金額が大きすぎます" };
   return { value };
 }
+
+/** 金額の合計。 */
+export function sum(amounts: readonly number[]): number {
+  return amounts.reduce((total, amount) => total + amount, 0);
+}

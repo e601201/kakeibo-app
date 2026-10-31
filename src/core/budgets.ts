@@ -1,4 +1,4 @@
-import { parseYen } from "./amount";
+import { parseYen, sum } from "./amount";
 import type { Validated } from "./validated";
 
 // 予算と収入の予定は、どちらも「適用開始月からの月の額」の履歴として持つ。
@@ -40,10 +40,8 @@ export function planDifference(
   budgets: Readonly<Record<string, number>>,
   incomePlans: Readonly<Record<string, number>>,
 ): { budgetTotal: number; incomeTotal: number; difference: number } {
-  const sum = (amounts: Readonly<Record<string, number>>) =>
-    Object.values(amounts).reduce((total, amount) => total + amount, 0);
-  const budgetTotal = sum(budgets);
-  const incomeTotal = sum(incomePlans);
+  const budgetTotal = sum(Object.values(budgets));
+  const incomeTotal = sum(Object.values(incomePlans));
   return { budgetTotal, incomeTotal, difference: incomeTotal - budgetTotal };
 }
 

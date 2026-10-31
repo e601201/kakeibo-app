@@ -14,3 +14,8 @@ export function dayLabel(date: string): string {
   const [, m, d] = date.split("-");
   return `${Number(m)}/${Number(d)}`;
 }
+
+/** 画面に出す割合。出さないとき（null）は「—」。例：25% */
+export function percent(rate: number | null): string {
+  return rate === null ? "—" : `${Math.round(rate * 100)}%`;
+}
