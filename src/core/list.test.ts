@@ -21,14 +21,14 @@ function expense(
   };
 }
 
-function income(id: string, date: string): ListedRecord {
+function income(id: string, date: string, memo = ""): ListedRecord {
   return {
     type: "income",
     id,
     date,
     kind: "salary",
     amount: 5000,
-    memo: "",
+    memo,
     createdAt: `${date}T09:00:00Z`,
   };
 }
@@ -58,7 +58,8 @@ describe("一覧の絞り込み", () => {
     expense("card", { categoryId: "eatout", description: "ディナー", paymentMethodId: "card" }),
     expense("super", { categoryId: "food", description: "ｽｰﾊﾟｰABC", paymentMethodId: "card" }),
     expense("review", { categoryId: "food", description: "不明な店", needsReview: true }),
-    income("salary", "2026-11-25"),
+    expense("gift", { categoryId: "food", description: "ケーキ", memo: "誕生日のお祝い" }),
+    income("salary", "2026-11-25", "11月分"),
   ];
 
   it("費目で絞り込める（収入は費目を持たないので出ない）", () => {
@@ -80,6 +81,15 @@ describe("一覧の絞り込み", () => {
     expect(ids(filterRecords(month, { query: "ディナ" }))).toEqual(["card"]);
   });
 
+  it("メモの言葉の一部でも検索できる", () => {
+    expect(ids(filterRecords(month, { query: "誕生日" }))).toEqual(["gift"]);
+  });
+
+  it("収入もメモで検索できる（ほかの条件があれば収入は出ない）", () => {
+    expect(ids(filterRecords(month, { query: "１１月" }))).toEqual(["salary"]);
+    expect(filterRecords(month, { query: "11月", paymentMethodId: "card" })).toEqual([]);
+  });
+
   it("全角・半角と大文字・小文字の違いは同じものとして検索する", () => {
     expect(ids(filterRecords(month, { query: "スーパー" }))).toEqual(["super"]);
     expect(ids(filterRecords(month, { query: "ａｂｃ" }))).toEqual(["super"]);
@@ -88,7 +98,7 @@ describe("一覧の絞り込み", () => {
 
   it("検索語の前後の空白は無視し、空の検索語は条件にしない", () => {
     expect(ids(filterRecords(month, { query: "  ディナー " }))).toEqual(["card"]);
-    expect(filterRecords(month, { query: "  " })).toHaveLength(5);
+    expect(filterRecords(month, { query: "  " })).toHaveLength(6);
   });
 
   it("条件を組み合わせると、すべてに合う記録だけが出る", () => {
@@ -96,6 +106,7 @@ describe("一覧の絞り込み", () => {
       "card",
     ]);
     expect(ids(filterRecords(month, { categoryId: "food", query: "ABC" }))).toEqual(["super"]);
+    expect(filterRecords(month, { categoryId: "food", query: "11月" })).toEqual([]);
     expect(filterRecords(month, { categoryId: "food", paymentMethodId: "cash" })).toEqual([]);
     expect(ids(filterRecords(month, { needsReview: true, categoryId: "food" }))).toEqual(["review"]);
     expect(filterRecords(month, { needsReview: true, categoryId: "eatout" })).toEqual([]);

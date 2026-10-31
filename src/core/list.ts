@@ -5,33 +5,34 @@ export type ListedRecord = ({ type: "expense" } & ExpenseRecord) | ({ type: "inc
 
 /**
  * 一覧の絞り込みの条件。指定しない条件は使わない。
- * 収入は費目・支払方法・要確認・内容を持たないので、どれかの条件を指定すると出ない。
+ * 収入は費目・支払方法・要確認を持たないので、どれかを指定すると出ない。検索語だけならメモで引っかかる。
  */
 export type ListFilter = {
   categoryId?: string;
   paymentMethodId?: string;
   /** true なら要確認の記録だけ */
   needsReview?: boolean;
-  /** 内容の検索語（部分一致） */
+  /** 内容・メモの検索語（部分一致） */
   query?: string;
 };
 
 /**
  * 1か月分の記録を条件で絞り込み、日付の新しい順に並べる（同じ日付なら、あとで登録した記録が上）。
- * 検索は内容の部分一致で、全角・半角と大文字・小文字の違いは同じものとして扱う。
+ * 検索は内容・メモの部分一致で、全角・半角と大文字・小文字の違いは同じものとして扱う。
  */
 export function filterRecords(records: readonly ListedRecord[], filter: ListFilter): ListedRecord[] {
   const query = normalizeForSearch(filter.query ?? "");
-  const hasCondition =
-    !!filter.categoryId || !!filter.paymentMethodId || !!filter.needsReview || query !== "";
+  const hasExpenseOnlyCondition =
+    !!filter.categoryId || !!filter.paymentMethodId || !!filter.needsReview;
+  const hits = (...texts: string[]) =>
+    query === "" || texts.some((text) => normalizeForSearch(text).includes(query));
 
   const matches = (record: ListedRecord): boolean => {
-    if (record.type === "income") return !hasCondition;
+    if (record.type === "income") return !hasExpenseOnlyCondition && hits(record.memo);
     if (filter.categoryId && record.categoryId !== filter.categoryId) return false;
     if (filter.paymentMethodId && record.paymentMethodId !== filter.paymentMethodId) return false;
     if (filter.needsReview && !record.needsReview) return false;
-    if (query && !normalizeForSearch(record.description).includes(query)) return false;
-    return true;
+    return hits(record.description, record.memo);
   };
 
   return records.filter(matches).sort(

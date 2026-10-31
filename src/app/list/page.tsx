@@ -108,7 +108,7 @@ function FilterForm({
       <input
         name="q"
         type="search"
-        placeholder="内容で検索"
+        placeholder="内容・メモで検索"
         defaultValue={filter.query ?? ""}
         className={inputClass}
       />
