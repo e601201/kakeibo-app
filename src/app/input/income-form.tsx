@@ -2,11 +2,21 @@
 
 import { useActionState } from "react";
 import { FieldError, inputClass } from "@/app/_components/form";
-import { INCOME_KINDS, INCOME_KIND_LABELS } from "@/core/records";
-import { type IncomeFormState, addIncomeAction } from "./actions";
+import { INCOME_KINDS, INCOME_KIND_LABELS, type IncomeInput } from "@/core/records";
+import type { IncomeFormState } from "./actions";
 
-export function IncomeForm({ today }: { today: string }) {
-  const [state, action, pending] = useActionState<IncomeFormState, FormData>(addIncomeAction, {});
+/** 収入のフォーム。入力画面では新しい記録を、修正画面では既存の記録を保存する。 */
+export function IncomeForm({
+  initial,
+  saveAction,
+  submitLabel,
+}: {
+  initial: Partial<IncomeInput>;
+  saveAction: (state: IncomeFormState, formData: FormData) => Promise<IncomeFormState>;
+  submitLabel: string;
+}) {
+  const [state, action, pending] = useActionState(saveAction, {});
+  const values = state.values ?? initial;
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -21,7 +31,7 @@ export function IncomeForm({ today }: { today: string }) {
         <input
           type="date"
           name="date"
-          defaultValue={state.values?.date ?? today}
+          defaultValue={values.date ?? ""}
           required
           className={inputClass}
         />
@@ -40,7 +50,7 @@ export function IncomeForm({ today }: { today: string }) {
                 type="radio"
                 name="kind"
                 value={kind}
-                defaultChecked={state.values?.kind === kind}
+                defaultChecked={values.kind === kind}
                 required
                 className="sr-only"
               />
@@ -57,7 +67,7 @@ export function IncomeForm({ today }: { today: string }) {
           name="amount"
           inputMode="numeric"
           autoComplete="off"
-          defaultValue={state.values?.amount ?? ""}
+          defaultValue={values.amount ?? ""}
           required
           className={`${inputClass} text-right text-xl`}
         />
@@ -68,7 +78,7 @@ export function IncomeForm({ today }: { today: string }) {
         <span className="text-sm">メモ（任意）</span>
         <textarea
           name="memo"
-          defaultValue={state.values?.memo ?? ""}
+          defaultValue={values.memo ?? ""}
           rows={2}
           className={inputClass}
         />
@@ -79,7 +89,7 @@ export function IncomeForm({ today }: { today: string }) {
         disabled={pending}
         className="rounded-lg bg-emerald-600 px-4 py-4 text-lg font-bold text-white disabled:opacity-50"
       >
-        記録する
+        {submitLabel}
       </button>
     </form>
   );

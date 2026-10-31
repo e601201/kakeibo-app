@@ -4,21 +4,25 @@ import { useActionState, useRef } from "react";
 import { FieldError, inputClass } from "@/app/_components/form";
 import { type Category, CATEGORY_KIND_LABELS } from "@/core/categories";
 import { type PaymentMethod, paymentMethodLabel } from "@/core/payment-methods";
-import { type ExpenseFormState, addExpenseAction } from "./actions";
+import type { ExpenseInput } from "@/core/records";
+import type { ExpenseFormState } from "./actions";
 
+/** 支出・振替のフォーム。入力画面では新しい記録を、修正画面では既存の記録を保存する。 */
 export function ExpenseForm({
   categories,
   paymentMethods,
-  today,
+  initial,
+  saveAction,
+  submitLabel,
 }: {
   categories: Category[];
   paymentMethods: PaymentMethod[];
-  today: string;
+  initial: Partial<ExpenseInput>;
+  saveAction: (state: ExpenseFormState, formData: FormData) => Promise<ExpenseFormState>;
+  submitLabel: string;
 }) {
-  const [state, action, pending] = useActionState<ExpenseFormState, FormData>(
-    addExpenseAction,
-    {},
-  );
+  const [state, action, pending] = useActionState(saveAction, {});
+  const values = state.values ?? initial;
   const amountRef = useRef<HTMLInputElement>(null);
 
   // iPhone の数字のキーボードにはマイナスがないので、返金はボタンで符号を切り替える
@@ -43,7 +47,7 @@ export function ExpenseForm({
         <input
           type="date"
           name="date"
-          defaultValue={state.values?.date ?? today}
+          defaultValue={values.date ?? ""}
           required
           className={inputClass}
         />
@@ -66,7 +70,7 @@ export function ExpenseForm({
                 type="radio"
                 name="categoryId"
                 value={category.id}
-                defaultChecked={state.values?.categoryId === category.id}
+                defaultChecked={values.categoryId === category.id}
                 required
                 className="sr-only"
               />
@@ -88,7 +92,7 @@ export function ExpenseForm({
             name="amount"
             inputMode="numeric"
             autoComplete="off"
-            defaultValue={state.values?.amount ?? ""}
+            defaultValue={values.amount ?? ""}
             required
             className={`${inputClass} text-right text-xl`}
           />
@@ -107,7 +111,7 @@ export function ExpenseForm({
         <span className="text-sm">内容（任意）</span>
         <input
           name="description"
-          defaultValue={state.values?.description ?? ""}
+          defaultValue={values.description ?? ""}
           className={inputClass}
         />
       </label>
@@ -116,7 +120,7 @@ export function ExpenseForm({
         <span className="text-sm">支払方法（任意）</span>
         <select
           name="paymentMethodId"
-          defaultValue={state.values?.paymentMethodId ?? ""}
+          defaultValue={values.paymentMethodId ?? ""}
           className={inputClass}
         >
           <option value="">選ばない</option>
@@ -131,7 +135,7 @@ export function ExpenseForm({
 
       <label className="flex flex-col gap-1">
         <span className="text-sm">メモ（任意）</span>
-        <textarea name="memo" defaultValue={state.values?.memo ?? ""} rows={2} className={inputClass} />
+        <textarea name="memo" defaultValue={values.memo ?? ""} rows={2} className={inputClass} />
       </label>
 
       <button
@@ -139,7 +143,7 @@ export function ExpenseForm({
         disabled={pending}
         className="rounded-lg bg-emerald-600 px-4 py-4 text-lg font-bold text-white disabled:opacity-50"
       >
-        記録する
+        {submitLabel}
       </button>
     </form>
   );

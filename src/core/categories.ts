@@ -87,9 +87,15 @@ export function sortCategories(categories: readonly Category[]): Category[] {
   return [...categories].sort((a, b) => a.sortOrder - b.sortOrder || (a.id < b.id ? -1 : 1));
 }
 
-/** 入力画面で選べる費目。非表示の費目は出さず、表示順に並べる。 */
-export function categoriesForInput(categories: readonly Category[]): Category[] {
-  return sortCategories(categories.filter((c) => !c.hidden));
+/**
+ * 入力画面で選べる費目。非表示の費目は出さず、表示順に並べる。
+ * 記録の修正では元の費目（originalCategoryId）を、非表示でもその場所に出す。
+ */
+export function categoriesForInput(
+  categories: readonly Category[],
+  originalCategoryId?: string,
+): Category[] {
+  return sortCategories(categories.filter((c) => !c.hidden || c.id === originalCategoryId));
 }
 
 /**

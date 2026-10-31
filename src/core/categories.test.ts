@@ -165,4 +165,13 @@ describe("入力画面の費目", () => {
     ];
     expect(categoriesForInput(categories).map((c) => c.id)).toEqual(["b", "c"]);
   });
+
+  it("記録の修正では、元の費目が非表示でもその場所に出る", () => {
+    const categories = [
+      category({ id: "c", name: "C", sortOrder: 2 }),
+      category({ id: "a", name: "A", sortOrder: 0, hidden: true }),
+      category({ id: "b", name: "B", sortOrder: 1, hidden: true }),
+    ];
+    expect(categoriesForInput(categories, "a").map((c) => c.id)).toEqual(["a", "c"]);
+  });
 });

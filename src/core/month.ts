@@ -27,3 +27,8 @@ export function addMonths(month: string, n: number): string {
   const index = year * 12 + (m - 1) + n;
   return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
 }
+
+/** その月の記録を読むための日付の範囲。from 以上、before より前。 */
+export function datesOfMonth(month: string): { from: string; before: string } {
+  return { from: `${month}-01`, before: `${addMonths(month, 1)}-01` };
+}

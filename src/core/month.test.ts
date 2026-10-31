@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addMonths, isMonth, monthOf, todayInJapan } from "./month";
+import { addMonths, datesOfMonth, isMonth, monthOf, todayInJapan } from "./month";
 
 describe("今日の日付", () => {
   it("日本時間の日付を今日とする（UTCではまだ前日でも）", () => {
@@ -26,5 +26,11 @@ describe("月の移動", () => {
     expect(isMonth("2026-13")).toBe(false);
     expect(isMonth("2026-1")).toBe(false);
     expect(isMonth("")).toBe(false);
+  });
+});
+
+describe("月の日付の範囲", () => {
+  it("その月の1日から、次の月の1日の手前まで", () => {
+    expect(datesOfMonth("2026-12")).toEqual({ from: "2026-12-01", before: "2027-01-01" });
   });
 });

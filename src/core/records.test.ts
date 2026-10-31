@@ -4,6 +4,7 @@ import type { PaymentMethod } from "./payment-methods";
 import {
   type ExpenseInput,
   type IncomeInput,
+  bulkChangeCategory,
   expenseKind,
   validateExpense,
   validateIncome,
@@ -122,6 +123,20 @@ describe("支出・振替の記録の検証", () => {
     });
   });
 
+  it("既存の記録の修正では、元の費目が非表示になっていてもその費目のまま保存できる", () => {
+    const editing = { originalCategoryId: "books" };
+    expect(
+      validateExpense(input({ categoryId: "books" }), categories, paymentMethods, editing),
+    ).toMatchObject({ ok: true, value: { categoryId: "books" } });
+  });
+
+  it("既存の記録の修正でも、別の非表示の費目には変えられない", () => {
+    const editing = { originalCategoryId: "eatout" };
+    expect(
+      validateExpense(input({ categoryId: "books" }), categories, paymentMethods, editing),
+    ).toEqual({ ok: false, errors: { categoryId: "非表示の費目は使えません" } });
+  });
+
   it("ない費目は使えない", () => {
     expect(validateExpense(input({ categoryId: "gone" }), categories, paymentMethods)).toEqual({
       ok: false,
@@ -212,6 +227,33 @@ describe("収入の記録の検証", () => {
     });
     expect(validateIncome(incomeInput({ amount: "abc" }))).toMatchObject({
       errors: { amount: "数字で入れてください" },
+    });
+  });
+});
+
+describe("まとめて費目を変える", () => {
+  it("選んだ支出・振替の費目を変え、要確認の印を外す", () => {
+    expect(bulkChangeCategory(["e1", "e2"], "eatout", categories)).toEqual({
+      ok: true,
+      value: { expenseIds: ["e1", "e2"], change: { categoryId: "eatout", needsReview: false } },
+    });
+  });
+
+  it("記録を一つも選んでいなければ変えられない", () => {
+    expect(bulkChangeCategory([], "eatout", categories)).toEqual({
+      ok: false,
+      errors: { expenseIds: "記録を選んでください" },
+    });
+  });
+
+  it("非表示の費目やない費目には変えられない", () => {
+    expect(bulkChangeCategory(["e1"], "books", categories)).toEqual({
+      ok: false,
+      errors: { categoryId: "非表示の費目は使えません" },
+    });
+    expect(bulkChangeCategory(["e1"], "", categories)).toEqual({
+      ok: false,
+      errors: { categoryId: "費目を選んでください" },
     });
   });
 });

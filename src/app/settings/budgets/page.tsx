@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { monthLabel, yen } from "@/app/_components/format";
+import { MonthNav } from "@/app/_components/month-nav";
 import { planDifference, planForMonth } from "@/core/budgets";
-import { addMonths, isMonth, monthOf, todayInJapan } from "@/core/month";
+import { isMonth, monthOf, todayInJapan } from "@/core/month";
 import { INCOME_KINDS } from "@/core/records";
 import { loadBudgetHistory, loadIncomePlanHistory } from "@/lib/data/budgets";
 import { loadCategories } from "@/lib/data/categories";
@@ -22,11 +24,6 @@ export default function BudgetsPage({ searchParams }: PageProps<"/settings/budge
       </Suspense>
     </main>
   );
-}
-
-function monthLabel(month: string): string {
-  const [year, m] = month.split("-");
-  return `${year}年${Number(m)}月`;
 }
 
 async function BudgetSettings({
@@ -52,15 +49,7 @@ async function BudgetSettings({
 
   return (
     <div className="flex flex-col gap-6">
-      <nav className="flex items-center justify-between">
-        <Link href={`?month=${addMonths(month, -1)}`} className="px-2 py-1 text-emerald-700">
-          ← 前の月
-        </Link>
-        <span className="text-lg font-bold">{monthLabel(month)}</span>
-        <Link href={`?month=${addMonths(month, 1)}`} className="px-2 py-1 text-emerald-700">
-          次の月 →
-        </Link>
-      </nav>
+      <MonthNav month={month} />
 
       {month < thisMonth && (
         <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
@@ -95,8 +84,4 @@ async function BudgetSettings({
       />
     </div>
   );
-}
-
-function yen(amount: number): string {
-  return `${amount.toLocaleString("ja-JP")}円`;
 }

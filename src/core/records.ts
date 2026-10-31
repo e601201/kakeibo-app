@@ -26,16 +26,29 @@ export type NewExpense = {
   memo: string;
 };
 
+/** 保存されている支出・振替の記録。 */
+export type ExpenseRecord = NewExpense & {
+  id: string;
+  /** 要確認。第2版のカード明細の取り込みで付く */
+  needsReview: boolean;
+  /** 登録日時（ISO 8601） */
+  createdAt: string;
+};
+
 type ExpenseField = "date" | "categoryId" | "amount" | "paymentMethodId";
 
-/** 支出・振替の入力を確かめる。間違いがあれば欄ごとの理由を返す。 */
+/**
+ * 支出・振替の入力を確かめる。間違いがあれば欄ごとの理由を返す。
+ * 非表示の費目は新しい記録には使えないが、既存の記録の修正（editing）では元の費目のままなら許す。
+ */
 export function validateExpense(
   input: ExpenseInput,
   categories: readonly Category[],
   paymentMethods: readonly PaymentMethod[],
+  editing?: { originalCategoryId: string },
 ): Validated<NewExpense, ExpenseField> {
   const date = parseDate(input.date);
-  const categoryId = parseCategory(input.categoryId, categories);
+  const categoryId = parseCategory(input.categoryId, categories, editing?.originalCategoryId);
   const amount = parseAmount(input.amount);
   const paymentMethodId = parsePaymentMethod(input.paymentMethodId, paymentMethods);
 
@@ -55,6 +68,31 @@ export function validateExpense(
       paymentMethodId: paymentMethodId.value,
       memo: input.memo.trim(),
     },
+  };
+}
+
+/**
+ * 選んだ支出・振替の費目をまとめて変える。見直しが終わったので、要確認の印も外す。
+ * 非表示の費目には変えられない。
+ */
+export function bulkChangeCategory(
+  expenseIds: readonly string[],
+  categoryId: string,
+  categories: readonly Category[],
+): Validated<
+  { expenseIds: string[]; change: { categoryId: string; needsReview: false } },
+  "expenseIds" | "categoryId"
+> {
+  const category = parseCategory(categoryId, categories);
+  if (expenseIds.length === 0 || "error" in category) {
+    const errors: Partial<Record<"expenseIds" | "categoryId", string>> = {};
+    if (expenseIds.length === 0) errors.expenseIds = "記録を選んでください";
+    if ("error" in category) errors.categoryId = category.error;
+    return { ok: false, errors };
+  }
+  return {
+    ok: true,
+    value: { expenseIds: [...expenseIds], change: { categoryId: category.value, needsReview: false } },
   };
 }
 
@@ -82,6 +120,13 @@ export type IncomeInput = { date: string; kind: string; amount: string; memo: st
 
 /** 保存してよい収入の記録。金額は正の円の整数。 */
 export type NewIncome = { date: string; kind: IncomeKind; amount: number; memo: string };
+
+/** 保存されている収入の記録。 */
+export type IncomeRecord = NewIncome & {
+  id: string;
+  /** 登録日時（ISO 8601） */
+  createdAt: string;
+};
 
 type IncomeField = "date" | "kind" | "amount";
 
@@ -127,11 +172,15 @@ function parseDate(text: string): Parsed<string> {
   return { value: date };
 }
 
-function parseCategory(id: string, categories: readonly Category[]): Parsed<string> {
+function parseCategory(
+  id: string,
+  categories: readonly Category[],
+  originalCategoryId?: string,
+): Parsed<string> {
   if (id === "") return { error: "費目を選んでください" };
   const category = categories.find((c) => c.id === id);
   if (!category) return { error: "費目を選び直してください" };
-  if (category.hidden) return { error: "非表示の費目は使えません" };
+  if (category.hidden && id !== originalCategoryId) return { error: "非表示の費目は使えません" };
   return { value: id };
 }
 

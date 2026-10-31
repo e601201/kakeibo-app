@@ -6,6 +6,7 @@ import { loadCategories } from "@/lib/data/categories";
 import { loadPaymentMethods } from "@/lib/data/payment-methods";
 import { createClient } from "@/lib/supabase/server";
 import { ExpenseForm } from "./expense-form";
+import { addExpenseAction, addIncomeAction } from "./actions";
 import { IncomeForm } from "./income-form";
 import { InputTabs } from "./input-tabs";
 
@@ -38,10 +39,14 @@ async function InputForms() {
         <ExpenseForm
           categories={categoriesForInput(categories)}
           paymentMethods={paymentMethods}
-          today={today}
+          initial={{ date: today }}
+          saveAction={addExpenseAction}
+          submitLabel="記録する"
         />
       }
-      incomeForm={<IncomeForm today={today} />}
+      incomeForm={
+        <IncomeForm initial={{ date: today }} saveAction={addIncomeAction} submitLabel="記録する" />
+      }
     />
   );
 }
