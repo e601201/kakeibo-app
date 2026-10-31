@@ -22,3 +22,20 @@ export function dayLabel(date: string): string {
 export function percent(rate: number | null): string {
   return rate === null ? "—" : `${Math.floor(rate * 100)}%`;
 }
+
+/** 出さないとき（null）は「—」にする金額。 */
+export function yenOrDash(amount: number | null): string {
+  return amount === null ? "—" : yen(amount);
+}
+
+/** 表やグラフの見出しの月。例：11月。withYear なら 2027年1月 */
+export function shortMonthLabel(month: string, withYear = false): string {
+  return withYear ? monthLabel(month) : `${Number(month.slice(5))}月`;
+}
+
+/** グラフの目盛りの短い金額。例：0 / 5千 / 1万 */
+export function compactYen(amount: number): string {
+  if (Math.abs(amount) >= 10000) return `${amount / 10000}万`;
+  if (Math.abs(amount) >= 1000) return `${amount / 1000}千`;
+  return String(amount);
+}

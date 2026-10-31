@@ -103,6 +103,28 @@ const PAGE_SIZE = 1000;
 
 type ExpenseAmount = Pick<NewExpense, "date" | "categoryId" | "amount">;
 
+/** 支出・振替の日付・費目・金額を、条件に合うものすべて読む。 */
+async function loadExpenseAmounts(
+  supabase: SupabaseClient,
+  where: { categoryIds?: string[]; from?: string; before: string },
+): Promise<ExpenseAmount[]> {
+  const records: ExpenseAmount[] = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    let query = supabase.from("expenses").select("date, category_id, amount").lt("date", where.before);
+    if (where.from) query = query.gte("date", where.from);
+    if (where.categoryIds) query = query.in("category_id", where.categoryIds);
+    const { data, error } = await query
+      // 分けて読むときに抜けや重なりが出ないよう、並びを決める
+      .order("id")
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (error) throw error;
+    for (const row of data as { date: string; category_id: string; amount: number }[]) {
+      records.push({ date: row.date, categoryId: row.category_id, amount: row.amount });
+    }
+    if (data.length < PAGE_SIZE) return records;
+  }
+}
+
 /** 指定した費目の支出・振替のうち、日付が before より前のもの（日付・費目・金額だけ）。 */
 export async function loadExpensesBefore(
   supabase: SupabaseClient,
@@ -110,20 +132,14 @@ export async function loadExpensesBefore(
   before: string,
 ): Promise<ExpenseAmount[]> {
   if (categoryIds.length === 0) return [];
-  const records: ExpenseAmount[] = [];
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from("expenses")
-      .select("date, category_id, amount")
-      .in("category_id", categoryIds)
-      .lt("date", before)
-      // 分けて読むときに抜けや重なりが出ないよう、並びを決める
-      .order("id")
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) throw error;
-    for (const row of data as { date: string; category_id: string; amount: number }[]) {
-      records.push({ date: row.date, categoryId: row.category_id, amount: row.amount });
-    }
-    if (data.length < PAGE_SIZE) return records;
-  }
+  return loadExpenseAmounts(supabase, { categoryIds, before });
+}
+
+/** 日付が from 以上 before より前の支出・振替（日付・費目・金額だけ）。 */
+export async function loadExpensesBetween(
+  supabase: SupabaseClient,
+  from: string,
+  before: string,
+): Promise<ExpenseAmount[]> {
+  return loadExpenseAmounts(supabase, { from, before });
 }

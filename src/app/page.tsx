@@ -31,10 +31,7 @@ export default function Home() {
       <nav className="grid grid-cols-2 gap-2">
         <NavTile href="/list" label="一覧" />
         <NavTile href="/report" label="月次レポート" />
-        <span className="rounded-lg border border-zinc-200 p-4 text-center text-zinc-400">
-          年間推移
-          <span className="block text-xs">準備中</span>
-        </span>
+        <NavTile href="/trend" label="年間推移" />
         <NavTile href="/settings" label="設定" />
       </nav>
     </main>
