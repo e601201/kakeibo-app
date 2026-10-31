@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { datesOfMonth } from "@/core/month";
 import type { IncomeKind, IncomeRecord, NewIncome } from "@/core/records";
+import { selectAllPages } from "./pages";
 
 // 収入のテーブル（supabase/migrations/20261030010000_incomes.sql）の読み書き。
 
@@ -68,4 +69,12 @@ export async function updateIncome(supabase: SupabaseClient, id: string, income:
 export async function deleteIncome(supabase: SupabaseClient, id: string) {
   const { error } = await supabase.from("incomes").delete().eq("id", id);
   if (error) throw error;
+}
+
+/** すべての収入（書き出し用）。 */
+export async function loadAllIncomes(supabase: SupabaseClient): Promise<IncomeRecord[]> {
+  const rows = await selectAllPages<IncomeRow>((from, to) =>
+    supabase.from("incomes").select(COLUMNS).order("id").range(from, to),
+  );
+  return rows.map(fromRow);
 }

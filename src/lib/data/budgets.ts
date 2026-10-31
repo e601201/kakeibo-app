@@ -1,15 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PlanEntry } from "@/core/budgets";
 import type { IncomeKind } from "@/core/records";
+import { selectAllPages } from "./pages";
 
 // 予算と収入の予定のテーブル（supabase/migrations/20261031000000_budgets.sql）の読み書き。
 // 保存は、同じキー・同じ適用開始月なら上書きする（upsert）。同じ月に複数の値を持たない。
 
 /** 予算の履歴。キーは費目の id。 */
 export async function loadBudgetHistory(supabase: SupabaseClient): Promise<PlanEntry[]> {
-  const { data, error } = await supabase.from("budgets").select("category_id, start_month, amount");
-  if (error) throw error;
-  return (data as { category_id: string; start_month: string; amount: number }[]).map((row) => ({
+  const rows = await selectAllPages<{ category_id: string; start_month: string; amount: number }>(
+    (from, to) =>
+      supabase.from("budgets").select("category_id, start_month, amount").order("id").range(from, to),
+  );
+  return rows.map((row) => ({
     key: row.category_id,
     startMonth: row.start_month,
     amount: row.amount,
@@ -20,9 +23,11 @@ export async function loadBudgetHistory(supabase: SupabaseClient): Promise<PlanE
 export async function loadIncomePlanHistory(
   supabase: SupabaseClient,
 ): Promise<PlanEntry<IncomeKind>[]> {
-  const { data, error } = await supabase.from("income_plans").select("kind, start_month, amount");
-  if (error) throw error;
-  return (data as { kind: IncomeKind; start_month: string; amount: number }[]).map((row) => ({
+  const rows = await selectAllPages<{ kind: IncomeKind; start_month: string; amount: number }>(
+    (from, to) =>
+      supabase.from("income_plans").select("kind, start_month, amount").order("id").range(from, to),
+  );
+  return rows.map((row) => ({
     key: row.kind,
     startMonth: row.start_month,
     amount: row.amount,

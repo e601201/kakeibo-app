@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { datesOfMonth } from "@/core/month";
 import type { ExpenseRecord, NewExpense } from "@/core/records";
+import { selectAllPages } from "./pages";
 
 // 支出・振替のテーブル（supabase/migrations/20261030000000_expenses.sql）の読み書き。
 // 登録元・取込元の明細IDは書かず、テーブルの初期値（手入力・明細IDなし）にする。
@@ -98,9 +99,6 @@ export async function updateExpensesCategory(
   if (error) throw error;
 }
 
-// Supabase の API は1回に1000行までしか返さないので、分けて読む
-const PAGE_SIZE = 1000;
-
 type ExpenseAmount = Pick<NewExpense, "date" | "categoryId" | "amount">;
 
 /** 支出・振替の日付・費目・金額を、条件に合うものすべて読む。 */
@@ -108,21 +106,18 @@ async function loadExpenseAmounts(
   supabase: SupabaseClient,
   where: { categoryIds?: string[]; from?: string; before: string },
 ): Promise<ExpenseAmount[]> {
-  const records: ExpenseAmount[] = [];
-  for (let offset = 0; ; offset += PAGE_SIZE) {
-    let query = supabase.from("expenses").select("date, category_id, amount").lt("date", where.before);
-    if (where.from) query = query.gte("date", where.from);
-    if (where.categoryIds) query = query.in("category_id", where.categoryIds);
-    const { data, error } = await query
-      // 分けて読むときに抜けや重なりが出ないよう、並びを決める
-      .order("id")
-      .range(offset, offset + PAGE_SIZE - 1);
-    if (error) throw error;
-    for (const row of data as { date: string; category_id: string; amount: number }[]) {
-      records.push({ date: row.date, categoryId: row.category_id, amount: row.amount });
-    }
-    if (data.length < PAGE_SIZE) return records;
-  }
+  const rows = await selectAllPages<{ date: string; category_id: string; amount: number }>(
+    (from, to) => {
+      let query = supabase
+        .from("expenses")
+        .select("date, category_id, amount")
+        .lt("date", where.before);
+      if (where.from !== undefined) query = query.gte("date", where.from);
+      if (where.categoryIds) query = query.in("category_id", where.categoryIds);
+      return query.order("id").range(from, to);
+    },
+  );
+  return rows.map((row) => ({ date: row.date, categoryId: row.category_id, amount: row.amount }));
 }
 
 /** 指定した費目の支出・振替のうち、日付が before より前のもの（日付・費目・金額だけ）。 */
@@ -142,4 +137,12 @@ export async function loadExpensesBetween(
   before: string,
 ): Promise<ExpenseAmount[]> {
   return loadExpenseAmounts(supabase, { from, before });
+}
+
+/** すべての支出・振替（書き出し用）。 */
+export async function loadAllExpenses(supabase: SupabaseClient): Promise<ExpenseRecord[]> {
+  const rows = await selectAllPages<ExpenseRow>((from, to) =>
+    supabase.from("expenses").select(COLUMNS).order("id").range(from, to),
+  );
+  return rows.map(fromRow);
 }
