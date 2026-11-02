@@ -25,6 +25,14 @@ export type YearlyTrend = {
 /** 年間推移に並べる月の数。 */
 const TREND_MONTHS = 12;
 
+/** 開始月を選ばなかったとき、今月の何か月前から並べるか。 */
+const DEFAULT_START_MONTHS_BEFORE = 3;
+
+/** 開始月を選ばなかったときの開始月。今日（YYYY-MM-DD、日本時間）の月の3か月前。 */
+export function defaultTrendStart(today: string): string {
+  return addMonths(monthOf(today), -DEFAULT_START_MONTHS_BEFORE);
+}
+
 /** 開始月から12か月の月と、その記録を読むための日付の範囲（from 以上、before より前）。 */
 export function trendPeriod(startMonth: string): { months: string[]; from: string; before: string } {
   const months = Array.from({ length: TREND_MONTHS }, (_, i) => addMonths(startMonth, i));

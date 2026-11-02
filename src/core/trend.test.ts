@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Category } from "./categories";
-import { trendPeriod, yearlyTrend } from "./trend";
+import { defaultTrendStart, trendPeriod, yearlyTrend } from "./trend";
 
 // 金額は作り物の値
 function category(overrides: Partial<Category> & Pick<Category, "id" | "name">): Category {
@@ -102,5 +102,15 @@ describe("年間推移", () => {
 describe("年間推移の期間", () => {
   it("開始月の1日から、12か月目の次の月の1日の手前まで読む", () => {
     expect(trendPeriod("2026-11")).toMatchObject({ from: "2026-11-01", before: "2027-11-01" });
+  });
+});
+
+describe("開始月の初期値", () => {
+  it("今月の3か月前の月", () => {
+    expect(defaultTrendStart("2026-11-02")).toBe("2026-08");
+  });
+
+  it("年をまたぐと前の年の月になる", () => {
+    expect(defaultTrendStart("2027-01-31")).toBe("2026-10");
   });
 });

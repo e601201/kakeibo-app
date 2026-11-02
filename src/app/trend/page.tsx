@@ -3,14 +3,11 @@ import { Suspense } from "react";
 import { inputClass } from "@/app/_components/form";
 import { monthLabel, shortMonthLabel, yen, yenOrDash } from "@/app/_components/format";
 import { MonthNav } from "@/app/_components/month-nav";
-import { isMonth } from "@/core/month";
-import { type TrendRow, yearlyTrend } from "@/core/trend";
+import { isMonth, monthOf, todayInJapan } from "@/core/month";
+import { defaultTrendStart, type TrendRow, yearlyTrend } from "@/core/trend";
 import { loadTrendInput } from "@/lib/data/report";
 import { createClient } from "@/lib/supabase/server";
-import { type TrendChartItem, TrendCharts } from "./trend-charts";
-
-// 使い始めた月。開始月を選ばなければ、ここから12か月を出す
-const FIRST_MONTH = "2026-11";
+import { type TrendChartItem, TrendLineChart } from "./trend-charts";
 
 export default function TrendPage({ searchParams }: PageProps<"/trend">) {
   return (
@@ -30,12 +27,18 @@ export default function TrendPage({ searchParams }: PageProps<"/trend">) {
 
 async function Trend({ searchParams }: Pick<PageProps<"/trend">, "searchParams">) {
   const { month: requested } = await searchParams;
-  const start = typeof requested === "string" && isMonth(requested) ? requested : FIRST_MONTH;
+  const today = todayInJapan(new Date());
+  const start =
+    typeof requested === "string" && isMonth(requested) ? requested : defaultTrendStart(today);
   const { categories, records } = await loadTrendInput(await createClient(), start);
   const { months, rows, monthsWithRecords } = yearlyTrend(start, categories, records);
   const end = months[months.length - 1];
   const expenseRows = rows.filter((r) => r.category.kind === "expense");
   const transferRows = rows.filter((r) => r.category.kind === "transfer");
+  const chartMonths = months.map((m) => shortMonthLabel(m));
+  // 線は今月まで描く。来月以降は0円に落ちて見えないよう描かない
+  const thisMonth = monthOf(today);
+  const drawnMonths = months.filter((m) => m <= thisMonth).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,11 +61,19 @@ async function Trend({ searchParams }: Pick<PageProps<"/trend">, "searchParams">
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-bold">支出</h2>
-        <TrendCharts items={chartItems(expenseRows, months)} />
+        <TrendLineChart
+          items={chartItems(expenseRows)}
+          months={chartMonths}
+          drawnMonths={drawnMonths}
+        />
       </section>
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-bold">振替</h2>
-        <TrendCharts items={chartItems(transferRows, months)} />
+        <TrendLineChart
+          items={chartItems(transferRows)}
+          months={chartMonths}
+          drawnMonths={drawnMonths}
+        />
       </section>
 
       <section className="flex flex-col gap-2">
@@ -96,14 +107,11 @@ async function Trend({ searchParams }: Pick<PageProps<"/trend">, "searchParams">
   );
 }
 
-function chartItems(rows: TrendRow[], months: string[]): TrendChartItem[] {
+function chartItems(rows: TrendRow[]): TrendChartItem[] {
   return rows.map((row) => ({
     id: row.category.id,
     name: row.category.name,
-    kind: row.category.kind,
-    total: row.total,
-    average: row.average,
-    points: months.map((m, i) => ({ month: shortMonthLabel(m), amount: row.amounts[i] })),
+    amounts: row.amounts,
   }));
 }
 
