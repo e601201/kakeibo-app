@@ -1,6 +1,6 @@
 # 年間推移を折れ線グラフにする
 
-Status: ready-for-agent
+Status: done
 
 元にした文書：`.scratch/v1-kakeibo/spec.md` の年間推移（F-07、ストーリー72〜77）、`GLOSSARY.md`
 
